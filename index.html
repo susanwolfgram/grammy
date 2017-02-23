@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style>
+
+body {
+  font: 15px "Futura", sans-serif;
+}
+
+div.tooltip { 
+    position: absolute;     
+    /*text-align: center;     */
+    /*width: 60px;          */
+    /*height: 28px;         */
+    padding: 10px;       
+    font: 15px sans-serif;    
+    background: lightsteelblue; 
+    border: 0px;    
+    border-radius: 8px;     
+    pointer-events: none;     
+}
+
+#chart {
+/*  margin-left: auto;*/
+  /*margin-right: 350px;*/
+  width: 900px;
+  float: left;
+  /*display: inline-block;*/
+
+}
+
+circle:hover {
+  cursor: pointer;
+}
+
+circle.legend:hover {
+  cursor: default;
+}
+
+.legend svg {
+  margin-bottom: -10px;
+}
+.legend {
+  margin-top: 35px;
+}
+/*.legend p {
+  width: 300px;
+}*/
+
+#sidebar {
+  width: 300px;
+  margin-left: 900px;
+  /*float: right;*/
+
+}
+
+#content {
+  margin-left: auto;
+  margin-right: auto;
+  width: 1200px;
+}
+
+iframe {
+  /*margin: 0;
+  padding: 0;*/
+  float: left;
+  width: 880px;
+  height: 300px;
+ /* align: left;*/
+}
+
+.song {
+  /*clear: both;*/
+  width: 300px;
+  /*margin: 0;*/
+  padding: 0;
+  margin-left: 900px;
+  /*height: 100px;*/
+}
+
+#details, #detailCont {
+  clear:both;
+  /*margin-top: 50px;*/
+}
+
+/* toggle styles */
+/* The switch - the box around the slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+  margin-top: -15px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {display:none;}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+
+/* nominations slider */
+input:disabled {
+  cursor: default;
+}
+
+#nominations {
+  cursor: pointer;
+}
+
+#nominations:disabled {
+  cursor: default;
+}
+
+
+
+
+</style>
+  <title>59th Grammys Seating Chart</title> 
+  <meta name="author" content="Sundar Singh | eesur.com">
+  
+<!--   <link rel="stylesheet" href="main.css"> -->
+  <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.1/lodash.min.js" charset="utf-8"></script>
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+ <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css">
+  <script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+  <script src="http://code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
+
+
+</head>
+<body>
+
+
+<div id="content">
+<header>
+  <h1>59th Grammys Seating Chart</h1>
+</header>
+<h2 style="text-align: center; width: 900px;" id="chartLabel"></h2>
+<div id="chart" style=" margin-top: 50px;"></div>
+
+<div id="sidebar">
+<div id="slider">
+  <h2>Controls</h2>
+  <label style="font-size: 20px;" for="term">Search for Someone: </label>
+  <input id="term" type="text" oninput="search();" /> 
+  <br /> 
+  <br /> 
+  <label style="font-size: 20px;" for="nominations">Filter by # of Nominations</label>
+  <input type="range" name="nominations" id="nominations" value="0" step="1" min="0" max="9" onchange="filter();" oninput="nomVal.value = nominations.value">
+  <output name="ageOutputName" id="nomVal">0</output>
+  <br />
+  <!-- Rounded switch -->
+<p style="font-size: 20px;">See Scatter Plot</p>
+<label class="switch">
+  <!-- <label style="font-size: 20px;"for="toggle">See Scatter Plot</label>
+  <br /> -->
+  <input type="checkbox" id="toggle">
+  <div class="slider round"></div>
+</label>
+</div>
+<div class="legend"> 
+    <h2>Legend</h2>
+    <svg height="100" xmlns="http://www.w3.org/2000/svg">
+      <circle class="legend" cx="50" cy="50" r="15" fill="#d3d3d3" />
+      <text x="105" y="55">0 nominations</text>
+    </svg> 
+    <br />
+    <svg height="100" xmlns="http://www.w3.org/2000/svg">
+      <circle class="legend" cx="50" cy="50" r="42" fill="#d3d3d3" />
+      <text x="105" y="55">9 nominations</text>
+    </svg>
+    <p style="background-color: #ff7171">No Nominations</p>
+    <p style="background-color: #FFD88C">Nominated</p>
+    <p style="background-color: #A2DDBB">Won</p>
+</div>
+</div>
+<div id="detailCont">
+<h2 id="detailLabel"></h2>
+<div id="details">
+<!-- <iframe class="song" src="https://embed.spotify.com/?uri=https://play.spotify.com/track/1OAYKfE0YdrN7C1yLWaLJo" frameborder="0" allowtransparency="true"></iframe> -->
+</div>
+</div>
+</div>
+<script src="grid.js" charset="utf-8"></script>
+</body>
+</html>
