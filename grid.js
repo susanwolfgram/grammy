@@ -131,7 +131,7 @@ function handleClick(d) {
   // var win = window.open(url, '_blank');
   // win.focus();
   callAjax(url, createDiv); 
-
+  // setTimeout(function() { window.scrollTo(0,1000); }, 500);
 }
 
 
@@ -150,7 +150,7 @@ function createDiv(data) {
     var iframe = document.createElement("p");
     iframe.innerHTML = extract.extract;
     document.getElementById("details").appendChild(iframe);
-    window.scrollTo(0,1000);
+    // window.scrollTo(0,1000);
   } else {
     document.getElementById("detailLabel").innerHTML = "No details found for: " + extract.title;
   }
