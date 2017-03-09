@@ -17,9 +17,14 @@ d3.csv("grammy-seats.csv", function(error, circleData) {
   dataset = circleData;
   drawCircles(dataset);
 });
+
 var xScale = d3.scaleLinear().domain([0, 9]).range([50, width - 50]);
 var yScale = d3.scaleLinear().domain([0, 5]).range([height - 90, 40]);
 function drawScatterPlot(data) {
+  document.getElementById("chart").innerHTML = "";
+  svg = d3.select("#chart").append("svg")
+  .attr("width", width)
+  .attr("height", height);
   //div.transition().duration(10).style("opacity", 0);
   document.getElementById("chartLabel").innerHTML = "Nominations vs Wins";
   // var xScale = d3.scaleLinear().domain([0, 9]).range([50, width - 40]);
@@ -54,26 +59,33 @@ function drawScatterPlot(data) {
             .text("Nominations");
   
 
+  console.log('hello' + ObjectLength(circles));
+  // circles.transition()
+  // .duration(1000)
+  // .attr("cx", function(d) { return xScale(d.nominations); })
+  // .attr("cy", function(d) { return yScale(d.won); });
 
-  circles.transition()
-  .duration(1000)
-  .attr("cx", function(d) { return xScale(d.nominations); })
-  .attr("cy", function(d) { return yScale(d.won); });
+  circles.attr("cx", function(d) { return xScale(d.nominations); })
+  .attr("cy", function(d) { return yScale(d.won); })
+  .attr("r", function(d) { return radius(d);});
 
-  
   circles = svg.selectAll("circle")
     .data(data)
     .enter()
     .append("circle")
     .attr("cx", function(d) { return xScale(d.nominations); })
     .attr("cy", function(d) { return yScale(d.won); })
-    .attr("r", function (d) { return 15; })
-    .style("fill", "#d3d3d3");
+    .attr("r", function (d) { return radius(d); })
+    .style("fill", function(d) {return getColor(d);});
 
   circles.on("mouseenter", handleMouseOver)
-  .on("mouseleave", handleMouseOut)
+  .on("mouseleave", scatterMouseOut)
   .on("click", handleClick);
 
+}
+
+function scatterMouseOut(d, i) {
+  div.transition().duration(10).style("opacity", 0);
 }
 
 var svg = d3.select("#chart").append("svg")
@@ -102,7 +114,7 @@ function drawCircles(data) {
     .attr("cx", function (d) { return x(d.x); })
     .attr("cy", function (d) { return y(d.y); })
     .attr("r", function (d) { return 15; })
-    .style("fill", "#d3d3d3");
+    .style("fill", function(d) { return getColor(d);});
 
   circles.on("mouseenter", handleMouseOver)
   .on("mouseleave", handleMouseOut)
@@ -122,35 +134,93 @@ function radius(d) {
   return d.nominations * 3 + 15; 
 }
 
-function handleClick(d) {
+
+
+
+function handleClick(data) {
   document.getElementById("details").innerHTML = "";
-  
+  document.getElementById("othersLabel").innerHTML = "";
   var url = "https://en.wikipedia.org/w/api.php?format=json&origin=*&action=query&prop=extracts&exintro=&explaintext=&titles=";
   //var url = "https://en.wikipedia.org/wiki/"
-  url += d.name;
+  url += data.name;
   // var win = window.open(url, '_blank');
   // win.focus();
   callAjax(url, createDiv); 
+  var str = "Others with " + data.nominations + " nominations and " + data.won + " wins:";
+  var toVis = dataset.filter(function(d) {
+    return d["nominations"] == data.nominations && d["won"] == data.won && d["name"] != data.name;
+  });
+  document.getElementById("others").innerHTML = "";
+  if (toVis.length > 0) {
+    document.getElementById("othersLabel").innerHTML = str;
+    var ul = document.createElement("ul");
+    var li = document.createElement("li");
+
+    for (i = 0; i < toVis.length; i++) {
+      li = document.createElement("li");
+      li.innerHTML = toVis[i].name;
+      li.onclick = listClick;
+      li.title = toVis[i].nominations + " " + toVis[i].won; 
+      ul.appendChild(li);
+
+    }
+    document.getElementById("others").appendChild(ul);
+  }
+
   // setTimeout(function() { window.scrollTo(0,1000); }, 500);
 }
 
+function listClick() {
+  document.getElementById("details").innerHTML = "";
+  document.getElementById("others").innerHTML = "";
+  document.getElementById("othersLabel").innerHTML = "";
+  var url = "https://en.wikipedia.org/w/api.php?format=json&origin=*&action=query&prop=extracts&exintro=&explaintext=&titles=";
+  //var url = "https://en.wikipedia.org/wiki/"
+  url += this.innerHTML;
+  // var win = window.open(url, '_blank');
+  // win.focus();
+  callAjax(url, createDiv); 
+  var name = this.innerHTML;
+
+  var arr = this.title.split(" "); 
+  var str = "Others with " + arr[0] + " nominations and " + arr[1] + " wins:";
+  var toVis = dataset.filter(function(d) {
+    return d["nominations"] == arr[0] && d["won"] == arr[1] && d["name"] != name;
+  });
+  
+  console.log(arr);
+  if (toVis.length > 0) {
+    document.getElementById("othersLabel").innerHTML = str;
+    var ul = document.createElement("ul");
+
+    for (i = 0; i < toVis.length; i++) {
+      li = document.createElement("li");
+      li.innerHTML = toVis[i].name;
+      li.onclick = listClick;
+      li.title = toVis[i].nominations + " " + toVis[i].won; 
+      ul.appendChild(li);
+
+    }
+    document.getElementById("others").appendChild(ul);
+  }
+
+}
 
 function createDiv(data) {
   data = JSON.parse(data);
-  console.log(data.query.pages);
+  // console.log(data.query.pages);
 
   var extract;
   for (var key in data.query.pages) {
     extract = data.query.pages[key];
   }
-  console.log(extract.extract);
+  // console.log(extract.extract);
   if (extract.extract) {
   
     document.getElementById("detailLabel").innerHTML = "More Info About: " + extract.title;
     var iframe = document.createElement("p");
     iframe.innerHTML = extract.extract;
     document.getElementById("details").appendChild(iframe);
-    // window.scrollTo(0,1000);
   } else {
     document.getElementById("detailLabel").innerHTML = "No details found for: " + extract.title;
   }
@@ -187,6 +257,16 @@ d3.selection.prototype.moveToFront = function() {
   });
 };
 
+function getColor(d) {
+  if (d.won > 0) {
+    return "#A2DDBB";
+  } else if (d.nominations > 0) {
+    return "#FFD88C";
+  } else {
+    return "#ff7171";
+  }
+}
+
 function handleMouseOver(d, i) {
     //d3.select(this).style("fill", "red");
     //div.transition().duration(0);
@@ -208,7 +288,7 @@ function handleMouseOver(d, i) {
   }
 
 function handleMouseOut(d, i) {
-  d3.select(this).transition().duration(10).style("fill", "#d3d3d3").attr("r", 15);
+  d3.select(this).transition().duration(10).attr("r", 15);
   div.transition().duration(10).style("opacity", 0);
 }
 
@@ -315,7 +395,7 @@ function search() {
       //.style("top", (document.querySelector("#chart circle").style.top) + "px");
     } else  {
       div.transition().duration(10).style("opacity", 0);
-      svg.select('circle').transition().duration(10).style("fill", "#d3d3d3").attr("r", 15);
+      svg.select('circle').transition().duration(10).style("fill", function(d) { return getColor(d);}).attr("r", 15);
     }
     oldToVis = toVis;
   } else {
