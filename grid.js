@@ -365,26 +365,23 @@ function search() {
   } else {
     drawCircles(toVis); 
   }
-  // console.log("hello from search");
-  // console.log(toVis[0].nominations);
-  // console.log(svg.selectAll("circle"));
-  // console.log(svg.selectAll("circle"));
   
   if (ObjectLength(toVis) == 1) {
       handleClick(toVis[0]);
-      svg.select('circle').transition().duration(1000).style("fill", function(d) {
-        if (toVis[0].won > 0) {
-          return "#A2DDBB";
-        } else if (toVis[0].nominations > 0) {
-          return "#FFD88C";
-        } else {
-          return "#ff7171";
-        }
-      }).attr("r", radius);
+      // svg.select('circle').transition().duration(1000).style("fill", function(d) {
+      //   if (toVis[0].won > 0) {
+      //     return "#A2DDBB";
+      //   } else if (toVis[0].nominations > 0) {
+      //     return "#FFD88C";
+      //   } else {
+      //     return "#ff7171";
+      //   }
+      // }).attr("r", radius);
       svg.select('circle').moveToFront();
       svg.select('circle')
       .attr("cx", toggled ? x(toVis[0].x) : xScale(toVis[0].nominations))
-      .attr("cy", toggled ? y(toVis[0].y) : xScale(toVis[0].won));
+      .attr("cy", toggled ? y(toVis[0].y) : yScale(toVis[0].won))
+      .attr("r", function(d) { return radius(d);});
 
       //div.transition().duration(500).style("opacity", .9);
       //div.html("Artist: " + toVis[0].name + "<br />Nominations: " + toVis[0].nominations + "<br />Won: " + toVis[0].won);
@@ -394,8 +391,8 @@ function search() {
       //.style("left", (document.querySelector("#chart circle").style.left) + "px")
       //.style("top", (document.querySelector("#chart circle").style.top) + "px");
     } else  {
-      div.transition().duration(10).style("opacity", 0);
-      svg.select('circle').transition().duration(10).style("fill", function(d) { return getColor(d);}).attr("r", 15);
+      // div.transition().duration(10).style("opacity", 0);
+      // svg.select('circle').transition().duration(10).style("fill", function(d) { return getColor(d);}).attr("r", toggled ? 15 : radius(d.nominations));
     }
     oldToVis = toVis;
   } else {
